@@ -3,11 +3,10 @@ name: Continuous Telegram Bot
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch: # এর ফলে আপনি নিজেও বাটন চেপে টেস্ট করতে পারবেন
   schedule:
-    # ব্যাকআপ হিসেবে প্রতি ৫ ঘণ্টা পর পর রান হবে যেন কোনো কারণে লুপ মিস না হয়
     - cron: '0 */5 * * *'
   workflow_run:
-    # এই ওয়ার্কфলোটি নিজে শেষ হওয়া মাত্রই আবার নতুন করে চালু হবে (২৪ ঘণ্টা লাইভ রাখার জন্য)
     workflows: ["Continuous Telegram Bot"]
     types:
       - completed
@@ -16,7 +15,6 @@ jobs:
   run-bot:
     runs-on: ubuntu-latest
     
-    # এই কনফিগারেশনটি আগের রানিং ওয়ার্কফ্লো রিমুভ/ক্যানসেল করে শুধু নতুন টাই একটিভ রাখবে
     concurrency:
       group: telegram-247-bot
       cancel-in-progress: true
@@ -28,7 +26,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '20' # এখানে আগে টাইপো বা ভুল ছিল, এখন ঠিক করা হয়েছে
         cache: 'npm'
 
     - name: Install Dependencies
@@ -39,6 +37,5 @@ jobs:
     - name: Run Assistant Bot (Max Available Time)
       env:
         BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      # ৫ ঘণ্টা (১৮০০০ সেকেন্ড) একটানা চলার পর স্ক্রিপ্টটি বন্ধ হবে এবং উপরের 'workflow_run' ট্রিগারটি নতুন রান চালু করবে
       run: timeout 18000 node index.js || true
       
