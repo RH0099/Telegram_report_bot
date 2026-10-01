@@ -3,13 +3,9 @@ name: Continuous Telegram Bot
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # এর ফলে আপনি নিজেও বাটন চেপে টেস্ট করতে পারবেন
+  workflow_dispatch: # এর মাধ্যমে আপনি প্রথমবার ম্যানুয়ালি ১ ক্লিকে রান করবেন
   schedule:
-    - cron: '0 */5 * * *'
-  workflow_run:
-    workflows: ["Continuous Telegram Bot"]
-    types:
-      - completed
+    - cron: '0 */5 * * *' # প্রতি ৫ ঘণ্টা পর পর ব্যাকআপ রান
 
 jobs:
   run-bot:
@@ -17,7 +13,7 @@ jobs:
     
     concurrency:
       group: telegram-247-bot
-      cancel-in-progress: true
+      cancel-in-progress: true # নতুন রান আসলে পুরনোটি নিজে থেকেই রিমুভ হয়ে যাবে
 
     steps:
     - name: Checkout Code
@@ -26,16 +22,17 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20' # এখানে আগে টাইপো বা ভুল ছিল, এখন ঠিক করা হয়েছে
-        cache: 'npm'
+        node-version: '20'
 
-    - name: Install Dependencies
+    - name: Dynamically Install Required Packages
+      # এটি রান হওয়ার সময় আপনার স্ক্রিপ্টের জন্য প্রয়োজনীয় telegraf বা অন্য যেকোনো প্যাকেজ নিজে থেকেই অটো-ডাউনলোড করে নিবে
       run: |
-        echo '{"name":"tg-assistant","version":"1.0.0","dependencies":{"telegraf":"^4.16.3"}}' > package.json
-        npm install
+        npm init -y
+        npm install telegraf
 
-    - name: Run Assistant Bot (Max Available Time)
+    - name: Run Assistant Bot
       env:
         BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      # ৫ ঘণ্টা প্রসেসটি একটানা চলবে, এরপর অটো-ক্যান্সেল হয়ে নতুন ৫ ঘণ্টার রান শুরু হবে
       run: timeout 18000 node index.js || true
       
